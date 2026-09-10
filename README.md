@@ -14,6 +14,11 @@ người khác dùng qua trình duyệt, kèm mật khẩu và tính năng uploa
    mạnh. Có thể để trống `SESSION_SECRET` (server tự sinh ngẫu nhiên mỗi
    lần khởi động — nghĩa là mọi người phải đăng nhập lại sau khi restart).
 4. Đảm bảo lệnh `claude` chạy được từ terminal thường (đã cài Claude Code).
+   - Trên Windows, `node-pty` yêu cầu tên file thực thi có đuôi `.exe` —
+     dùng `CLAUDE_COMMAND=claude.exe` trong `.env` (giá trị mặc định trong
+     `.env.example`), không phải `claude` không đuôi, nếu không phiên sẽ
+     báo lỗi "File not found" và hiện "session ended, restarting..." liên
+     tục ngay khi vừa mở trang.
 
 ## Chạy
 
