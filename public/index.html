@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>claude-remote — Terminal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+<style>
+  html, body { height: 100%; margin: 0; background: #1e1e1e; }
+  #terminal { height: 70vh; padding: 0.5rem; box-sizing: border-box; }
+  #upload-bar { display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem; background: #2d2d2d; color: #eee; font-family: system-ui, sans-serif; }
+  #upload-result { font-size: 0.85rem; word-break: break-all; }
+</style>
+</head>
+<body>
+  <div id="terminal"></div>
+  <div id="upload-bar">
+    <input type="file" id="file-input">
+    <button id="upload-btn">Tải lên</button>
+    <span id="upload-result"></span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script>
+    const term = new Terminal({ convertEol: true, fontSize: 14 });
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal'));
+    fitAddon.fit();
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+
+    ws.addEventListener('open', () => {
+      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+    });
+
+    ws.addEventListener('message', (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'output' || msg.type === 'system') {
+        term.write(msg.data);
+      }
+    });
+
+    term.onData((data) => {
+      ws.send(JSON.stringify({ type: 'input', data }));
+    });
+
+    window.addEventListener('resize', () => {
+      fitAddon.fit();
+      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+    });
+
+    document.getElementById('upload-btn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('file-input');
+      const resultEl = document.getElementById('upload-result');
+      if (!fileInput.files.length) return;
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      resultEl.textContent = 'Đang tải lên...';
+      const res = await fetch('/upload', { method: 'POST', body: formData });
+      const body = await res.json();
+      resultEl.textContent = res.ok ? body.path : `Lỗi: ${body.error}`;
+    });
+  </script>
+</body>
+</html>

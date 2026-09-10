@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>claude-remote — Đăng nhập</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #1e1e1e; color: #eee; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+  form { background: #2d2d2d; padding: 2rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; min-width: 280px; }
+  input { padding: 0.5rem; border-radius: 4px; border: 1px solid #555; background: #1e1e1e; color: #eee; }
+  button { padding: 0.5rem; border-radius: 4px; border: none; background: #4c8bf5; color: white; cursor: pointer; }
+  #error { color: #f28b82; min-height: 1.2rem; }
+</style>
+</head>
+<body>
+  <form id="login-form">
+    <h2>claude-remote</h2>
+    <input type="password" id="password" placeholder="Mật khẩu" autofocus required>
+    <div id="error"></div>
+    <button type="submit">Vào</button>
+  </form>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('error');
+      errorEl.textContent = '';
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        window.location.href = '/';
+      } else {
+        const body = await res.json().catch(() => ({}));
+        errorEl.textContent = body.error || 'Đăng nhập thất bại';
+      }
+    });
+  </script>
+</body>
+</html>
