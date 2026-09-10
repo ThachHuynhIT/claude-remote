@@ -20,17 +20,24 @@ function attachWsHub(server, ptyManager, path = '/ws') {
   const clients = new Set();
 
   server.on('upgrade', (req, socket, head) => {
-    const { pathname } = new URL(req.url, 'http://localhost');
-    if (pathname !== path) return;
-    const cookies = parseCookies(req.headers.cookie);
-    if (!verifyToken(cookies[COOKIE_NAME])) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
-      return;
+    try {
+      const { pathname } = new URL(req.url, 'http://localhost');
+      if (pathname !== path) {
+        socket.destroy();
+        return;
+      }
+      const cookies = parseCookies(req.headers.cookie);
+      if (!verifyToken(cookies[COOKIE_NAME])) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit('connection', ws, req);
+      });
+    } catch {
+      if (!socket.destroyed) socket.destroy();
     }
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      wss.emit('connection', ws, req);
-    });
   });
 
   wss.on('connection', (ws) => {

@@ -14,3 +14,14 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`claude-remote listening on http://localhost:${PORT}`);
 });
+
+function shutdown() {
+  if (ptyManager.proc) {
+    ptyManager.proc.kill();
+  }
+  server.close();
+  process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

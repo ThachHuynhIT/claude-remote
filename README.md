@@ -7,6 +7,9 @@ người khác dùng qua trình duyệt, kèm mật khẩu và tính năng uploa
 
 1. Cài Node.js >= 18.
 2. `npm install`
+   - `node-pty` là một native module. Trên Windows, `npm install` có thể
+     báo lỗi build nếu máy chưa cài "Desktop development with C++" (Visual
+     Studio Build Tools) — cài gói đó trước rồi chạy lại `npm install`.
 3. Copy `.env.example` thành `.env`, đặt `ACCESS_PASSWORD` là một mật khẩu
    mạnh. Có thể để trống `SESSION_SECRET` (server tự sinh ngẫu nhiên mỗi
    lần khởi động — nghĩa là mọi người phải đăng nhập lại sau khi restart).
@@ -19,6 +22,17 @@ npm start
 ```
 
 Mặc định chạy ở `http://localhost:3000`.
+
+Để chạy bộ test (dành cho người phát triển dự án này): `npm test`.
+
+File upload được giới hạn tối đa 20MB mỗi file, lưu vào thư mục `uploads/`
+ở thư mục gốc dự án, và **không** tự động bị xoá — người vận hành nên tự
+dọn dẹp thư mục này định kỳ.
+
+Dự án hiện chưa có tính năng đăng xuất / thu hồi phiên đăng nhập riêng lẻ.
+Để chấm dứt quyền truy cập của tất cả mọi người, người vận hành cần restart
+server (việc này cũng vô hiệu hoá mọi phiên đang đăng nhập, vì
+`SESSION_SECRET` được sinh lại mỗi lần khởi động).
 
 ## Chia sẻ qua Internet bằng VS Code Port Forwarding
 
@@ -36,6 +50,12 @@ Bất kỳ ai có link + mật khẩu đều có thể gõ lệnh vào phiên Cl
 và Claude Code có thể thực thi lệnh shell trên máy bạn. Chỉ chia sẻ với
 người bạn thực sự tin tưởng, và tắt server/đặt lại port về Private ngay
 khi không dùng nữa.
+
+Lưu ý: giới hạn số lần đăng nhập sai (5 lần / 60 giây) được đếm chung cho
+cả tiến trình server, không tính riêng theo từng người truy cập — vì mọi
+người đều kết nối vào cùng một cổng local qua VS Code tunnel, nếu một
+người nhập sai mật khẩu nhiều lần thì những người khác cũng sẽ tạm thời bị
+chặn theo.
 
 ## Kiểm tra thủ công trước khi dùng thật
 

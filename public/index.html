@@ -32,7 +32,9 @@
     const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
 
     ws.addEventListener('open', () => {
-      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      }
     });
 
     ws.addEventListener('message', (event) => {
@@ -42,13 +44,25 @@
       }
     });
 
+    ws.addEventListener('close', () => {
+      term.write('\r\n[connection lost — reload the page to reconnect]\r\n');
+    });
+
+    ws.addEventListener('error', () => {
+      term.write('\r\n[connection lost — reload the page to reconnect]\r\n');
+    });
+
     term.onData((data) => {
-      ws.send(JSON.stringify({ type: 'input', data }));
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'input', data }));
+      }
     });
 
     window.addEventListener('resize', () => {
       fitAddon.fit();
-      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      }
     });
 
     document.getElementById('upload-btn').addEventListener('click', async () => {
@@ -58,9 +72,18 @@
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
       resultEl.textContent = 'Đang tải lên...';
-      const res = await fetch('/upload', { method: 'POST', body: formData });
-      const body = await res.json();
-      resultEl.textContent = res.ok ? body.path : `Lỗi: ${body.error}`;
+      try {
+        const res = await fetch('/upload', { method: 'POST', body: formData });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.redirected || !contentType.includes('application/json')) {
+          resultEl.textContent = 'Phiên đã hết hạn, vui lòng tải lại trang.';
+          return;
+        }
+        const body = await res.json();
+        resultEl.textContent = res.ok ? body.path : `Lỗi: ${body.error}`;
+      } catch (err) {
+        resultEl.textContent = 'Lỗi: không thể tải lên, vui lòng thử lại.';
+      }
     });
   </script>
 </body>

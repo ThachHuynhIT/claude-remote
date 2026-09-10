@@ -16,21 +16,26 @@ class PtyManager extends EventEmitter {
   }
 
   spawn() {
-    this.proc = pty.spawn(this.command, this.args, {
-      name: 'xterm-color',
-      cols: 80,
-      rows: 24,
-      cwd: this.cwd,
-      env: this.env,
-    });
-    this.proc.onData((data) => {
-      this.scrollback = (this.scrollback + data).slice(-MAX_SCROLLBACK);
-      this.emit('data', data);
-    });
-    this.proc.onExit(({ exitCode, signal }) => {
+    try {
+      this.proc = pty.spawn(this.command, this.args, {
+        name: 'xterm-color',
+        cols: 80,
+        rows: 24,
+        cwd: this.cwd,
+        env: this.env,
+      });
+      this.proc.onData((data) => {
+        this.scrollback = (this.scrollback + data).slice(-MAX_SCROLLBACK);
+        this.emit('data', data);
+      });
+      this.proc.onExit(({ exitCode, signal }) => {
+        this.proc = null;
+        this.emit('exit', { exitCode, signal });
+      });
+    } catch {
       this.proc = null;
-      this.emit('exit', { exitCode, signal });
-    });
+      this.emit('exit', { exitCode: null, signal: null });
+    }
   }
 
   ensureAlive() {
@@ -41,7 +46,9 @@ class PtyManager extends EventEmitter {
 
   write(data) {
     this.ensureAlive();
-    this.proc.write(data);
+    if (this.proc) {
+      this.proc.write(data);
+    }
   }
 
   resize(cols, rows) {

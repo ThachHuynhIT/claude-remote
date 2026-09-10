@@ -5,7 +5,7 @@ const multer = require('multer');
 
 function sanitizeFilename(originalName) {
   const base = path.basename(originalName || '').replace(/[^a-zA-Z0-9._-]/g, '_');
-  return base || 'file';
+  return (base && base !== '.' && base !== '..') ? base : 'file';
 }
 
 function createUploadRouter({ uploadsDir, maxBytes = 20 * 1024 * 1024 }) {
