@@ -1,0 +1,21 @@
+{
+  "name": "claude-remote",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Share a live Claude Code terminal session over the browser with a trusted person.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "node-pty": "^1.0.0",
+    "ws": "^8.17.0"
+  }
+}
